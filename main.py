@@ -9,9 +9,13 @@ import time
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("cal")
+        self.setWindowTitle("Calorie Counter")
         self.setGeometry(100, 100, 980, 720)
+	self.createUserUI()
         self.show()
+	
+    def createUserUI(self):
+	pass
 
 app = QApplication(sys.argv)
 
