@@ -1,1 +1,2 @@
-icrawler
+pyqt5
+requests
