@@ -5,8 +5,21 @@ with open('../keys.txt') as file:
     content = file.read()
     key = content.split('\n')[0].split('KEY:')[1].strip()
 
+def search(queue, hits=5) -> list:
+    req = requests.get(f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key}&query={queue}")
+    data = json.loads(req.content)
+    payload = []
+    for i in range(hits):
+        current = data['foods'][i]
+        payload.append({
+            "id": current['fdcId'],
+            "description": current['description'].lower().title(),
+            "category": current['foodCategory']
+            })
+    return payload
+
 class Food:
-    def __init__(self, name, _id):
+    def __init__(self, name, _id) -> None:
         self.name = name
         self._id = _id
         self.createNutritionalData()
