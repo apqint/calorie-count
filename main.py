@@ -11,11 +11,15 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Calorie Counter")
         self.setGeometry(100, 100, 980, 720)
-	self.createUserUI()
+        self.createUserUI()
         self.show()
 	
     def createUserUI(self):
-	pass
+    	button = QPushButton("Name", self)
+    	button.clicked.connect(self.action)
+
+    def action(self):
+    	print('bota loh')
 
 app = QApplication(sys.argv)
 
