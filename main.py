@@ -1,30 +1,46 @@
-import sys, os
-import asyncio
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-import time
+import requests
+import json
 
+with open('../keys.txt') as file:
+    content = file.read()
+    key = content.split('\n')[0].split('KEY:')[1].strip()
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Calorie Counter")
-        self.setGeometry(100, 100, 980, 720)
-        self.createUserUI()
-        self.show()
-	
-    def createUserUI(self):
-    	button = QPushButton("Name", self)
-    	button.clicked.connect(self.action)
+def search(queue, hits=5) -> list:
+    req = requests.get(f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key}&query={queue}")
+    data = json.loads(req.content)
+    payload = []
+    for i in range(hits):
+        current = data['foods'][i]
+        payload.append({
+            "id": current['fdcId'],
+            "description": current['description'].lower().title(),
+            "category": current['foodCategory']
+            })
+    return payload
 
-    def action(self):
-    	print('bota loh')
+class Food:
+    def __init__(self, name, _id) -> None:
+        self.name = name
+        self._id = _id
+        self.createNutritionalData()
 
-app = QApplication(sys.argv)
+    def createNutritionalData(self) -> None:
+        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={key}")
+        data = json.loads(req.content)
+        payload = {
+            "calories": [data['foodNutrients'][2]['amount'], 'kcal'],
+            "protein": [data['foodNutrients'][4]['amount'], "g"]
+        }
+        self.payload = payload
 
-if __name__ == "__main__":
-	window = MainWindow()
-	window.show()
-	app.exec()
-
+    def createFullNutritionalData(self) -> None:
+        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={key}")
+        data = json.loads(req.content)
+        payload = {}
+        for i in data['foodNutrients']:
+            try:
+                payload[f'{i["nutrient"]["name"].lower()}'] = [i['amount'],i['nutrient']['unitName']]
+            except KeyError:
+                pass
+        payload['calories'] = [data['foodNutrients'][2]['amount'], 'kcal']
+        self.payload = payload
