@@ -1,31 +1,35 @@
 import requests
 import json
 
-with open('../keys.txt') as file:
-    content = file.read()
-    key = content.split('\n')[0].split('KEY:')[1].strip()
 
-def search(queue, hits=5) -> list:
+def search(hits, queue, key) -> list:
     req = requests.get(f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key}&query={queue}")
     data = json.loads(req.content)
     payload = []
     for i in range(hits):
         current = data['foods'][i]
+        calories = [item for item in current['foodNutrients'] if item['nutrientName']=='Energy'][0]['value']
         payload.append({
             "id": current['fdcId'],
             "description": current['description'].lower().title(),
-            "category": current['foodCategory']
+            "category": current['foodCategory'],
+            "calories": calories,
             })
+        if "brandName" in current or "brandOwner" in current:
+            payload[i]["brand"]=current['brandName'] if "brandName" in current else current['brandOwner']
+            
     return payload
 
 class Food:
-    def __init__(self, name, _id) -> None:
+    def __init__(self, name, _id, amount, key) -> None:
         self.name = name
         self._id = _id
+        self.key = key
+        self.amount = amount
         self.createNutritionalData()
 
     def createNutritionalData(self) -> None:
-        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={key}")
+        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={self.key}")
         data = json.loads(req.content)
         payload = {
             "calories": [data['foodNutrients'][2]['amount'], 'kcal'],
@@ -34,7 +38,7 @@ class Food:
         self.payload = payload
 
     def createFullNutritionalData(self) -> None:
-        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={key}")
+        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={self.key}")
         data = json.loads(req.content)
         payload = {}
         for i in data['foodNutrients']:
