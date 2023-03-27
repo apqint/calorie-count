@@ -12,10 +12,10 @@ def main():
     # print(f'{Scheme.question} USDA KEY: ', end="")
     key = "BqSIVCRVNcM6FTTgS0c4GlqT4CiaFdPHwaAadj4n"#input("").strip()
     os.system('cls')
-    breakfast = ['bals'] # eaten in the morning
+    breakfast = [] # eaten in the morning
     lunch = [] # eaten in the afternoon
     dinner = [] # eaten in the evening
-    misc = [] #eaten any time
+    misc = ['bota'] #eaten any time
     meals = [breakfast, lunch, dinner, misc]
     meals_pointer = {
         "breakfast": breakfast,
@@ -27,6 +27,14 @@ def main():
         print(Scheme.affirmation + " Meals:")
         for i, x in enumerate(meals):
             print(f'  {Fore.CYAN}[{i+1}]{Fore.WHITE} {list(meals_pointer.keys())[i].title()}')
+
+    def totalCals():
+        total = 0
+        # for i in (breakfast+lunch+dinner+misc):
+            # total+=i.payload['calories']*100/i.amount
+        print((breakfast+lunch)+dinner+misc)
+
+        return total
 
     def searchFood():
         print(Scheme.question + " Food type: ", end="")
@@ -43,18 +51,18 @@ def main():
         nr = int(input(""))
         print(Scheme.question + f" How much? (in grams): ", end="")
         amount = int(input(""))
-        food_to_add = Food(results[nr]['description'], results[nr]['id'], amount, key)
+        food_to_add = Food(results[nr-1]['description'], results[nr-1]['id'], amount, key)
         return food_to_add
 
     def addFood():
         printMeals()
-        print(Scheme.question + " Which meal would you like to appoint to?", end="")
+        print(Scheme.question + " Which meal would you like to appoint to? ", end="")
         meal = input("")
         meal = meals_pointer[meal.lower().strip()] if not meal.isdigit() else meals[int(meal)-1]
+        food = searchFood()
+        meal.append(food)
         print(meal)
-    a = searchFood()
-    print(a)
-    print(a.payload)
+    addFood()
     os.system('PAUSE>NUL')
 
 if __name__=="__main__":
