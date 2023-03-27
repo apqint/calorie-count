@@ -15,7 +15,7 @@ def main():
     breakfast = [] # eaten in the morning
     lunch = [] # eaten in the afternoon
     dinner = [] # eaten in the evening
-    misc = ['bota'] #eaten any time
+    misc = [] #eaten any time
     meals = [breakfast, lunch, dinner, misc]
     meals_pointer = {
         "breakfast": breakfast,
