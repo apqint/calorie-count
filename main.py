@@ -8,14 +8,16 @@ class Scheme:
     question = f"{Fore.YELLOW}[?]{Fore.WHITE}"
     warning = f"{Fore.RED}[!]{Fore.WHITE}"
     affirmation = f'{Fore.GREEN}[+]{Fore.WHITE}'
+    bold = '\033[1m'
+    regular = '\033[0m'
 def main():
     # print(f'{Scheme.question} USDA KEY: ', end="")
     key = "BqSIVCRVNcM6FTTgS0c4GlqT4CiaFdPHwaAadj4n"#input("").strip()
     os.system('cls')
     breakfast = [] # eaten in the morning
     lunch = [] # eaten in the afternoon
-    dinner = [] # eaten in the evening
-    misc = [] # eaten any time
+    dinner = []# eaten in the evening
+    misc = [] #eaten any time
     meals = [breakfast, lunch, dinner, misc]
     meals_pointer = {
         "breakfast": breakfast,
@@ -51,23 +53,32 @@ def main():
         print(Scheme.question + f" How much? (in grams): ", end="")
         amount = int(input(""))
         food_to_add = Food(results[nr-1]['description'], results[nr-1]['id'], amount, key, [results[nr-1]['calories'], results[nr-1]['protein']])
-        return food_to_add
+        return food_to_add 
 
     def addFood():
         printMeals()
         print(Scheme.question + " Which meal would you like to appoint to? ", end="")
         meal = input("")
-        meal = meals_pointer[meal.lower().strip()] if not meal.isdigit() else meals[int(meal)-1]
+        try:
+            meal = meals_pointer[meal.lower().strip()] if not meal.isdigit() else meals[int(meal)-1]
+        except (KeyError, IndexError):
+            os.system('CLS')
+            print(Scheme.bold + Scheme.warning + " No such meal." + Scheme.regular)
+            return addFood()
         food = searchFood()
         meal.append(food)
         os.system("CLS")
-        print(Scheme.affirmation + f" Added {food.name} to your diet.")
+        print(Scheme.bold + Scheme.affirmation + f" Added {food.name} to your diet." + Scheme.regular)
 
     def removeFood():
         printMeals()
         print(Scheme.question + " Which meal would you like to remove from? ", end="")
         meal = input("")
         meal = meals_pointer[meal.lower().strip()] if not meal.isdigit() else meals[int(meal)-1]
+        if len(meal) == 0:
+            os.system('CLS')
+            print(Scheme.warning + " Nothing to remove.")
+            return removeFood()
         os.system('CLS')
         for i, x in enumerate(breakfast):
             print(f"{Fore.CYAN}[{i+1}{Fore.WHITE}] {x.name.split(',')[0].strip()}")
@@ -76,7 +87,7 @@ def main():
         food_name = meal[nr-1]
         meal.pop(nr-1)
         print(Scheme.affirmation + f" Removed {food_name.name} from your diet.")
-        
+
     def printDetailedMeals():
         # breakfast
         print(Scheme.affirmation + f" Breakfast ({totalCals(breakfast)} calories):")
@@ -101,11 +112,19 @@ def main():
         print(Scheme.affirmation + f" Total: {totalCals()} calories")
 
     def menu():
-        pass
-    addFood()
-    addFood()
-    removeFood()
-    printDetailedMeals()
+        actions = ["Add to meal", "Remove from meal", "Display diet"]
+        action_function = [addFood, removeFood, printDetailedMeals]
+        print(Scheme.affirmation + " Options:")
+        for i, action in enumerate(actions):
+            print(f'  {Fore.CYAN}[{i+1}] {Fore.WHITE}{action}')
+        print(Scheme.question + " ", end="")
+        nr = int(input(""))
+        func = action_function[nr-1]
+        os.system('cls')
+        func()
+        menu()
+
+    menu()
 
     os.system('PAUSE>NUL')
 
