@@ -1,10 +1,10 @@
-import requests
-import json
+from requests import get
+from json import loads
 
 
 def search(hits, queue, key) -> list:
-    req = requests.get(f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key}&query={queue}")
-    data = json.loads(req.content)
+    req = get(f"https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key}&query={queue}&pageSize={hits}")
+    data = loads(req.content)
     payload = []
     for i in range(hits):
         current = data['foods'][i]
@@ -34,8 +34,8 @@ class Food:
         self.protein = nutrition[1] # PER 100g, CALCULATIONS DONE LATER
 
     def createNutritionalData(self) -> None:
-        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={self.key}")
-        data = json.loads(req.content)
+        req = get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={self.key}")
+        data = loads(req.content)
         payload = {
             "calories": [data['foodNutrients'][2]['amount'], 'kcal'],
             "protein": [data['foodNutrients'][4]['amount'], "g"]
@@ -43,8 +43,8 @@ class Food:
         self.payload = payload
 
     def createFullNutritionalData(self) -> None:
-        req = requests.get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={self.key}")
-        data = json.loads(req.content)
+        req = get(f"https://api.nal.usda.gov/fdc/v1/food/{self._id}?api_key={self.key}")
+        data = loads(req.content)
         payload = {}
         for i in data['foodNutrients']:
             try:
@@ -73,4 +73,3 @@ class Meal:
 
     def getName(self):
         return self.name
-
