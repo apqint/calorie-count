@@ -1,11 +1,13 @@
 from src.food import Food, search, Meal
-from colorama import Fore
-from colorama import init as coloramaInit
-import traceback
-import os, requests
-import getpass
-coloramaInit()
-os.system('title Calorie Counter')
+from colorama import Fore, init
+from os import system
+from json import loads
+from traceback import print_exc
+from base64 import b64decode, b64encode
+from requests import get
+from getpass import getpass
+init()
+system('title Calorie Counter')
 class Scheme:
     question = f"{Fore.YELLOW}[?]{Fore.WHITE}"
     warning = f"{Fore.RED}[!]{Fore.WHITE}"
@@ -15,7 +17,7 @@ class Scheme:
 
 key = [None]
 def main():
-    os.system('cls')
+    system('cls')
     breakfast = Meal("Breakfast") # eaten in the morning
     lunch = Meal("Lunch") # eaten in the afternoon
     dinner = Meal("Dinner")# eaten in the evening
@@ -39,17 +41,17 @@ _________ _________
         key_ = input("")
         # validate key
         if key_.strip().lower()=='get': 
-            os.system('start https://open.fda.gov/apis/authentication/')
+            system('start https://www.ers.usda.gov/developer/data-apis/')
             return getKey()
         print(Scheme.affirmation + " Validating...")
-        req = requests.get(f'https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key_}&query=tea')
+        req = get(f'https://api.nal.usda.gov/fdc/v1/foods/search?api_key={key_}&query=tea')
         if "error" in str(req.content):
-            os.system('cls')
+            system('cls')
             tag()
             print(Scheme.warning + " Invalid API Key!")
             return getKey()
         key[0] = key_
-        os.system('CLS')
+        system('CLS')
 
     def printMeals():  
         print(Scheme.affirmation + " Meals:")
@@ -74,7 +76,7 @@ _________ _________
         try:
             results = search(hits, queue, key[0])
         except KeyError:
-            traceback.print_exc()
+            print_exc()
             print(Scheme.warning + " Error! Likely from an invalid API key.")
         for x, i in enumerate(results):
             print(f'  {Fore.CYAN}[{x+1}]{Fore.WHITE} {i["description"]} ({i["category"]}{f""": {i["brand"]}""" if "brand" in i else ""}) -> {i["calories"]} calories/100g')
@@ -93,13 +95,13 @@ _________ _________
         try:
             meal = meals_pointer[meal.lower().strip()] if not meal.isdigit() else meals[int(meal)-1]
         except (KeyError, IndexError):
-            os.system('CLS')
+            system('CLS')
             tag()
             print(Scheme.bold + Scheme.warning + " No such meal." + Scheme.regular)
             return addFood()
         food = searchFood()
         meal.append(food)
-        os.system("CLS")
+        system("CLS")
         tag()
         print(Scheme.bold + Scheme.affirmation + f" Added {food.name} to your diet." + Scheme.regular)
 
@@ -112,11 +114,11 @@ _________ _________
             meal = meals_pointer[meal.lower().strip()] if not meal.isdigit() else meals[int(meal)-1]
         foods = meal.getFoods()
         if len(foods) == 0:
-            os.system('CLS')
+            system('CLS')
             tag()
             print(Scheme.warning + " Nothing to remove.")
             return removeFood()
-        os.system('CLS')
+        system('CLS')
         tag()
         for i, x in enumerate(foods):
             print(f"{Fore.CYAN}[{i+1}]{Fore.WHITE} {x.name.split(',')[0].strip()}")
@@ -132,7 +134,7 @@ _________ _________
             print(Scheme.affirmation + f' {i.getName()} ({totalCals(foods)} calories): ')
             for i, food in enumerate(foods):
                 print(f"  {Fore.CYAN}[{i+1}] {food.amount}g {food.name.split(',')[0].strip()}: {food.calories*food.amount/100} calories")
-        print(Scheme.affirmation + f" Total: {totalCals()} calories")
+        print(Scheme.affirmation + Scheme.bold + f" Total: {totalCals()} calories" + Scheme.regular)
 
     def createMeal():
         print(Scheme.question + " What would your meal be called? ('exit' to cancel): ", end="")
@@ -153,7 +155,7 @@ _________ _________
             try:
                 meal = meals_pointer[nr.lower().strip()] if not nr.isdigit() else meals[int(nr)-1]
             except (KeyError, IndexError):
-                os.system('CLS')
+                system('CLS')
                 tag()
                 print(Scheme.bold + Scheme.warning + " No such meal." + Scheme.regular)
                 return removeMeal()
@@ -170,7 +172,7 @@ _________ _________
             try:
                 meal = meals_pointer[nr.lower().strip()] if not nr.isdigit() else meals[int(nr)-1]
             except (KeyError, IndexError):
-                os.system('CLS')
+                system('CLS')
                 print(Scheme.bold + Scheme.warning + " No such meal." + Scheme.regular)
                 return renameMeal()
         print(Scheme.question + " What should the name be? ", end="")
@@ -187,11 +189,11 @@ _________ _________
         try:
             meal = meals_pointer[nr.lower().strip()] if not nr.isdigit() else meals[int(nr)-1]
         except (KeyError, IndexError):
-            os.system('CLS')
+            system('CLS')
             tag()
             print(Scheme.bold + Scheme.warning + " No such meal." + Scheme.regular)
             return editMeal()
-        os.system('cls')
+        system('cls')
         tag()
         print(Scheme.affirmation + " Editing " + Scheme.bold + meal.getName() + Scheme.regular)
         actions = ["Remove from meal", "Rename meal", "Delete meal"]
@@ -204,31 +206,87 @@ _________ _________
         func = action_function[nr-1]
         func(meal)
 
+    def save():
+        print(Scheme.question + " Save file name: ", end="")
+        name = input("").strip()
+        print(Scheme.affirmation + " Saving...")
+        string = ""
+        for i in meals:
+            string+=f"{i.getName()}:"
+            for food in i.getFoods():
+                string+=f" {food._id},{food.amount}"
+            string+='\n'
+        with open(name, 'w+') as file:
+            file.write(b64encode(string[:-1].encode('ascii')).decode('ascii'))
+        print(Scheme.affirmation + " Saved.")
+
+    def loadSave():
+        print(Scheme.question + " File name to load from: ('exit' to cancel): ", end="")
+        name = input("")
+        if name.strip().lower()=='exit': return
+        with open(name, 'r') as file:
+            content = file.read()
+        parsed_content = b64decode(content.encode('ascii').decode('ascii')).decode('utf-8')
+        meals.clear()
+        meals_pointer.clear()
+        print(Scheme.affirmation + " Loading...")
+        iteration = 1
+        listed_meals = parsed_content.split('\n')
+        for line in listed_meals:
+            print(f'  {Fore.CYAN}[%] {Fore.WHITE}{iteration}/{len(listed_meals)}')
+            temp_meal = Meal(line.split(':')[0].strip())
+            for food in [item for item in line.split(':')[1].split(' ') if item!='']:
+                food_id = food.split(',')[0].strip()
+                food_amount = food.split(',')[1].strip()
+                req = get(f'https://api.nal.usda.gov/fdc/v1/food/{food_id}?api_key={key[0]}')
+                data = loads(req.content)
+                try: calories = data['foodNutrients'][2]['amount']
+                except: calories = 0
+                try: protein = [item for item in data['foodNutrients'] if item['nutrientName']=='Protein' and item['unitName'].lower()=="g"][0]['amount']
+                except: protein = 0
+                temp_food = Food(data['description'].lower().title(), data['fdcId'], int(food_amount), key[0], [calories, protein])
+                temp_meal.append(temp_food)
+                del temp_food
+            meals.append(temp_meal)
+            meals_pointer[name.lower()] = temp_meal
+            del temp_meal
+            iteration+=1
+        print(Scheme.affirmation + " Loaded.")
+
+
     def menu():
         tag()
-        actions = ["Add to meal", "Edit a meal", "Display diet", "Create meal", "Change USDA Key"]
-        action_function = [addFood, editMeal, printDetailedMeals, createMeal, getKey]
+        actions = ["Add to meal", "Edit a meal", "Display diet", "Create meal", "Save", "Load save", "Change USDA Key"]
+        action_function = [addFood, editMeal, printDetailedMeals, createMeal, save, loadSave, getKey]
         print(Scheme.affirmation + " Options:")
         for i, action in enumerate(actions):
             print(f'  {Fore.CYAN}[{i+1}] {Fore.WHITE}{action}')
         print(Scheme.question + " ", end="")
-        nr = int(input(""))
+        nr = input("")
+        try:
+            nr = int(nr)
+        except:
+            system('CLS')
+            return menu()
+        if nr<=0 or nr>len(action_function):
+            system('CLS')
+            return menu()
         func = action_function[nr-1]
-        os.system('cls')
+        system('cls')
         tag()
         func()
         print('\n' + Scheme.affirmation + Scheme.bold + " Press ENTER to return to menu." + Scheme.regular)
-        ignore = getpass.getpass('')
-        os.system('cls')
+        ignore = getpass('')
+        system('cls')
         menu()
     getKey()
     menu()
 
-    os.system('PAUSE>NUL')
+    system('PAUSE>NUL')
 
 if __name__=="__main__":
     try:
         main()
     except Exception as e:
-        traceback.print_exc()
-        os.system('pause')
+        print_exc()
+        system('pause')
