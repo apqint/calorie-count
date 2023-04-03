@@ -35,7 +35,7 @@ _________ _________
 \     \___\     \____{Fore.BLUE}
  \______  /\______  /
         \/        \/ 
-            """)
+            """.replace('Pinzari Adrian','B-2211')
     def getKey():
         print(Scheme.question + " USDA KEY ('GET' TO GET AN API KEY): ", end = "")
         key_ = input("")
