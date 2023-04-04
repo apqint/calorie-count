@@ -242,7 +242,7 @@ _________ _________
                 data = loads(req.content)
                 try: calories = data['foodNutrients'][2]['amount']
                 except: calories = 0
-                try: protein = [item for item in data['foodNutrients'] if item['nutrientName']=='Protein' and item['unitName'].lower()=="g"][0]['amount']
+                try: protein = [item for item in data['foodNutrients'] if item['nutrientName']=='Protein'][0]['amount']
                 except: protein = 0
                 temp_food = Food(data['description'].lower().title(), data['fdcId'], int(food_amount), key[0], [calories, protein])
                 temp_meal.append(temp_food)
